@@ -1,0 +1,57 @@
+import java.math.BigInteger;
+import java.util.HashMap;
+import java.util.Map;
+
+public class ShamirSecretSharing {
+
+    public static BigInteger lagrangeInterpolation(Map<Integer, BigInteger> shares) {
+        BigInteger secret = BigInteger.ZERO;
+
+        for (Map.Entry<Integer, BigInteger> share : shares.entrySet()) {
+            int x_i = share.getKey();
+            BigInteger y_i = share.getValue();
+            BigInteger term = BigInteger.ONE;
+
+            for (Map.Entry<Integer, BigInteger> otherShare : shares.entrySet()) {
+                int x_j = otherShare.getKey();
+                if (x_i != x_j) {
+                    term = term.multiply(BigInteger.valueOf(x_j)).subtract(BigInteger.valueOf(x_i));
+                    term = term.divide(BigInteger.valueOf(x_j - x_i));
+                }
+            }
+
+            secret = secret.add(y_i.multiply(term));
+        }
+
+        return secret;
+    }
+
+    public static BigInteger decodeYValue(String value, int base) {
+        return new BigInteger(value, base);
+    }
+
+    public static BigInteger processTestCase(Map<String, Object> testCase) {
+        int k = (Integer) testCase.get("k");
+        Map<Integer, BigInteger> shares = new HashMap<>();
+
+        for (Map.Entry<String, Map<String, String>> shareEntry : ((Map<String, Map<String, String>>) testCase.get("keys")).entrySet()) {
+            int x = Integer.parseInt(shareEntry.getKey());
+            String yValue = shareEntry.getValue().get("value");
+            int base = Integer.parseInt(shareEntry.getValue().get("base"));
+            shares.put(x, decodeYValue(yValue, base));
+        }
+
+        return lagrangeInterpolation(shares);
+    }
+
+    public static void main(String[] args) {
+        // Load test cases from JSON file (implementation not shown)
+        Map<String, Object> testCase1 = /* Load first test case from JSON */;
+        Map<String, Object> testCase2 = /* Load second test case from JSON */;
+
+        BigInteger secret1 = processTestCase(testCase1);
+        BigInteger secret2 = processTestCase(testCase2);
+
+        System.out.println("Secrets: " + secret1 + ", " + secret2);
+    }
+}
